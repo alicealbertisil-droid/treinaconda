@@ -220,6 +220,16 @@ const ctx = cv.getContext('2d');
 const mm = $('minimap');
 const mmx = mm.getContext('2d');
 let W = 0, H = 0, DPR = 1;
+let world = null;            // ultimo snapshot do servidor (HUD e checagens)
+let cam = { x: 0, y: 0 };
+let scale = 1;
+let frame = null;            // estado ja interpolado do quadro atual
+let vignette = null;         // gradiente da vinheta em cache (recriado no resize)
+
+/* buffer de snapshots para interpolacao: o servidor manda 15 quadros/s,
+   aqui renderizamos a 60fps suavizando entre eles (movimento continuo) */
+const buf = [];
+const INTERP_MS = 100;       // renderiza ~1,5 tick no passado e interpola
 
 // dispositivos de toque rodam num modo mais leve (menos pixels e menos detalhe)
 const LOW = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
@@ -235,17 +245,6 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 resize();
-
-let world = null;            // ultimo snapshot do servidor (HUD e checagens)
-let cam = { x: 0, y: 0 };
-let scale = 1;
-
-/* buffer de snapshots para interpolacao: o servidor manda 15 quadros/s,
-   aqui renderizamos a 60fps suavizando entre eles (movimento continuo) */
-const buf = [];
-const INTERP_MS = 100;       // renderiza ~1,5 tick no passado e interpola
-let frame = null;            // estado ja interpolado do quadro atual
-let vignette = null;         // gradiente da vinheta em cache (recriado no resize)
 
 function enterGame() {
   world = null; frame = null; buf.length = 0;
