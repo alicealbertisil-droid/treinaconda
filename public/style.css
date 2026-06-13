@@ -114,6 +114,12 @@ html,body{height:100%;background:var(--night);color:var(--bone);
 .lobby-foot{text-align:center;margin-top:26px;color:#7d6857;font-size:12.5px;letter-spacing:.4px}
 .credit{text-align:center;margin-top:10px;color:#b5462e;font-family:'Bungee',sans-serif;font-size:13px;letter-spacing:.6px;text-shadow:0 1px 0 rgba(0,0,0,.35)}
 
+/* aviso de status de conexao (so aparece quando ha problema) */
+#netStatus{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:50;
+  display:none;background:rgba(156,31,23,.92);color:#fff;font-weight:700;font-size:13px;
+  padding:7px 16px;border-radius:999px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+#netStatus.show{display:block}
+
 /* ============================ JOGO ============================ */
 #game{background:#0a0f0a}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
