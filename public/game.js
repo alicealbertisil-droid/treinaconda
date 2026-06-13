@@ -146,7 +146,7 @@ joinBtn.addEventListener('click', () => {
   joinMsg.textContent = 'Conectando…';
 });
 
-socket.on('full', () => { joinBtn.disabled = false; joinMsg.textContent = 'A sala está cheia (50/50).'; });
+socket.on('full', () => { joinBtn.disabled = false; joinMsg.textContent = 'A sala está cheia (25/25).'; });
 
 socket.on('joined', (d) => {
   joined = true; amHost = d.host; myId = d.id;
@@ -373,7 +373,7 @@ function render() {
   // camera trava na cabeca ja interpolada: scroll continuo do mundo
   cam.x = frame.me.x;
   cam.y = frame.me.y;
-  scale = Math.max(0.72, 1.12 - Math.sqrt(frame.me.score) * 0.009);
+  scale = LOW ? Math.max(0.50, 0.85 - Math.sqrt(frame.me.score) * 0.009) : Math.max(0.72, 1.12 - Math.sqrt(frame.me.score) * 0.009);
 
   drawBackground();
   drawFood();
