@@ -194,12 +194,17 @@ const mm = $('minimap');
 const mmx = mm.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 
+// dispositivos de toque rodam num modo mais leve (menos pixels e menos detalhe)
+const LOW = window.matchMedia && window.matchMedia('(pointer:coarse)').matches;
+
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const cap = LOW ? 1.25 : 1.75;   // limita a densidade de pixels p/ ganhar desempenho
+  DPR = Math.min(window.devicePixelRatio || 1, cap);
   W = window.innerWidth; H = window.innerHeight;
   cv.width = W * DPR; cv.height = H * DPR;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  vignette = null; // recria a vinheta no proximo quadro
 }
 window.addEventListener('resize', resize);
 resize();
@@ -213,6 +218,7 @@ let scale = 1;
 const buf = [];
 const INTERP_MS = 100;       // renderiza ~1,5 tick no passado e interpola
 let frame = null;            // estado ja interpolado do quadro atual
+let vignette = null;         // gradiente da vinheta em cache (recriado no resize)
 
 function enterGame() {
   world = null; frame = null; buf.length = 0;
@@ -379,29 +385,34 @@ function drawBackground() {
   ctx.lineWidth = 26;
   ctx.stroke();
 
-  // vinheta
-  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
-  vg.addColorStop(0, 'rgba(0,0,0,0)');
-  vg.addColorStop(1, 'rgba(0,0,0,.55)');
-  ctx.fillStyle = vg;
+  // vinheta (gradiente em cache para nao recriar a cada quadro)
+  if (!vignette) {
+    vignette = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,.55)');
+  }
+  ctx.fillStyle = vignette;
   ctx.fillRect(0, 0, W, H);
 }
 
 function drawFood() {
   const f = frame.food;
+  const sc = Math.max(scale, 0.6);
   for (let i = 0; i < f.length; i += 4) {
-    const p = toScreen(f[i], f[i + 1]);
-    if (p[0] < -10 || p[0] > W + 10 || p[1] < -10 || p[1] > H + 10) continue;
+    const x = (f[i] - cam.x) * scale + W / 2;
+    const y = (f[i + 1] - cam.y) * scale + H / 2;
+    if (x < -12 || x > W + 12 || y < -12 || y > H + 12) continue;
     const big = f[i + 3];
-    const r = (big ? 6 : 3.6) * Math.max(scale, 0.6);
+    const r = (big ? 7.5 : 3.4) * sc;
     ctx.beginPath();
-    ctx.arc(p[0], p[1], r * 1.9, 0, 6.2832);
-    ctx.fillStyle = 'rgba(255,255,255,.05)';
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(p[0], p[1], r, 0, 6.2832);
+    ctx.arc(x, y, r, 0, 6.2832);
     ctx.fillStyle = FOOD_COLORS[f[i + 2]] || '#ff6a5a';
     ctx.fill();
+    if (big) {           // anel sutil so nas bolas grandes (poucas na tela)
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(255,255,255,.55)';
+      ctx.stroke();
+    }
   }
 }
 
@@ -424,23 +435,28 @@ function drawSnake(s) {
     ctx.lineWidth = 2 * r + 10;
     ctx.stroke();
   }
-  // contorno
-  ctx.strokeStyle = 'rgba(0,0,0,.35)';
-  ctx.lineWidth = 2 * r + 5;
-  ctx.stroke();
+  // contorno (pulado no modo leve do mobile)
+  if (!LOW) {
+    ctx.strokeStyle = 'rgba(0,0,0,.35)';
+    ctx.lineWidth = 2 * r + 5;
+    ctx.stroke();
+  }
   // preenchimento base
   ctx.strokeStyle = skinColor(s.skin, 0);
   ctx.lineWidth = 2 * r;
   ctx.stroke();
 
-  // escamas / faixas de cor
-  for (let i = n - 1; i >= 0; i -= 3) {
-    const p = toScreen(pts[i * 2], pts[i * 2 + 1]);
-    if (p[0] < -r || p[0] > W + r || p[1] < -r || p[1] > H + r) continue;
-    ctx.beginPath();
-    ctx.arc(p[0], p[1], r, 0, 6.2832);
-    ctx.fillStyle = skinColor(s.skin, i);
-    ctx.fill();
+  // escamas / faixas de cor (so no desktop; no mobile fica a cor base, mais leve)
+  if (!LOW) {
+    for (let i = n - 1; i >= 0; i -= 4) {
+      const px = (pts[i * 2] - cam.x) * scale + W / 2;
+      const py = (pts[i * 2 + 1] - cam.y) * scale + H / 2;
+      if (px < -r || px > W + r || py < -r || py > H + r) continue;
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, 6.2832);
+      ctx.fillStyle = skinColor(s.skin, i);
+      ctx.fill();
+    }
   }
 
   // cabeca
@@ -467,8 +483,7 @@ function drawSnake(s) {
   const fs = Math.max(11, r * 0.95);
   ctx.font = '700 ' + fs + 'px Inter, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(0,0,0,.6)';
-  ctx.fillText(s.nick, hx, hy - r - 6 + 1);
+  if (!LOW) { ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillText(s.nick, hx, hy - r - 6 + 1); }
   ctx.fillStyle = s.me ? '#ffd27a' : '#fff';
   ctx.fillText(s.nick, hx, hy - r - 6);
 }
