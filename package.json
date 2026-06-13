@@ -1,0 +1,16 @@
+{
+  "name": "treinaconda",
+  "version": "1.0.0",
+  "description": "Treinaconda - jogo multiplayer estilo slither.io com tema vermelho/floresta e integracao com avatares do Habbo.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5"
+  }
+}

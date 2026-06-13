@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Treinaconda</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===================== LOBBY ===================== -->
+<div id="lobby" class="screen">
+  <div class="grain"></div>
+  <div class="lobby-wrap">
+    <header class="brand">
+      <div class="logo-coil" id="logoCoil"></div>
+      <h1>TREINA<span>CONDA</span></h1>
+      <p class="subtitle">Gincana dos Treinadores</p>
+      <p class="tag">A serpente dos Treinadores. Entre na mata, cresça e domine.</p>
+    </header>
+
+    <div class="panels">
+      <!-- Coluna entrada -->
+      <section class="card join-card">
+        <h2>Entrar na sala</h2>
+        <label class="fld">
+          <span>Nickname</span>
+          <input id="nick" maxlength="16" placeholder="Seu nome no jogo" autocomplete="off" />
+        </label>
+        <label class="fld">
+          <span>Nick do Habbo</span>
+          <div class="habbo-row">
+            <input id="habbo" maxlength="30" placeholder="usuario do Habbo.com.br" autocomplete="off" />
+            <img id="habboPreview" class="habbo-face" alt="" />
+          </div>
+        </label>
+
+        <button id="joinBtn" class="btn primary">Entrar na mata</button>
+        <p id="joinMsg" class="msg"></p>
+      </section>
+
+      <!-- Coluna guarda-roupa -->
+      <section class="card wardrobe-card">
+        <h2>Guarda-roupa</h2>
+        <p class="sub">Escolha a pele da sua cobra</p>
+        <div id="skinGrid" class="skin-grid"></div>
+      </section>
+    </div>
+
+    <!-- Sala -->
+    <section id="roomBox" class="card room-card hidden">
+      <div class="room-head">
+        <h2>Sala única <span id="roomCount" class="count">0/0</span></h2>
+        <div id="hostControls" class="host-controls hidden">
+          <button id="startBtn" class="btn primary">Iniciar partida</button>
+        </div>
+        <div id="waitHost" class="wait hidden">Aguardando o host iniciar…</div>
+      </div>
+      <ul id="playerList" class="player-list"></ul>
+    </section>
+
+    <footer class="lobby-foot">Partidas de 4 minutos • o 1º a entrar é o host • até 50 jogadores</footer>
+    <div class="credit">Feito por: Didilim:XD</div>
+  </div>
+</div>
+
+<!-- ===================== JOGO ===================== -->
+<div id="game" class="screen hidden">
+  <canvas id="cv"></canvas>
+
+  <div id="timer" class="hud timer">4:00</div>
+
+  <div id="board" class="hud board">
+    <div class="board-title">Ranking</div>
+    <ol id="boardList"></ol>
+    <div id="myRank" class="my-rank"></div>
+  </div>
+
+  <div id="scoreTag" class="hud score-tag">0</div>
+
+  <canvas id="minimap" class="hud minimap" width="150" height="150"></canvas>
+
+  <div id="spectBanner" class="spect-banner hidden">
+    <div class="skull">💀</div>
+    <div class="spect-text">Você foi eliminado</div>
+    <div id="spectSub" class="spect-sub"></div>
+  </div>
+
+  <div id="boostHint" class="hud boost-hint">Segure o clique ou espaço para acelerar</div>
+
+  <button id="boostBtn" class="boost-btn" aria-label="Acelerar">BOOST</button>
+</div>
+
+<!-- ===================== PÓDIO ===================== -->
+<div id="podium" class="screen overlay hidden">
+  <div class="podium-wrap">
+    <h2 class="podium-title">Fim de partida</h2>
+    <div id="podiumSpots" class="podium-spots"></div>
+    <div id="podiumTimer" class="podium-timer">Voltando ao lobby…</div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
