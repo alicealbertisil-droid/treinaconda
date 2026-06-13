@@ -14,7 +14,12 @@ const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: '*' } });
+const io = new Server(server, {
+  cors: { origin: '*' },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 20000,
+  pingInterval: 25000,
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.get('/health', (_req, res) => res.send('ok'));
@@ -25,7 +30,7 @@ const TICK_MS      = 1000 / TICK_HZ;
 const WORLD_RADIUS = 2200;               // arena circular (dimensionada p/ ~25 jogadores)
 const ROUND_MS     = 4 * 60 * 1000;      // 4 minutos
 const PODIUM_MS    = 5000;               // 5 segundos de podio
-const MAX_PLAYERS  = 50;                 // bem acima dos 25 pedidos
+const MAX_PLAYERS  = 25;                 // sala para 25 jogadores
 const TARGET_FOOD  = 600;
 const BIG_FOOD_VAL = 5;                  // bolas grandes valem mais pontos
 const VIEW_RADIUS  = 1250;               // area de interesse enviada a cada cliente
@@ -327,7 +332,7 @@ function loop() {
     const someoneAlive = [...players.values()].some(p => p.alive && p.snake);
     if (now >= roundEndsAt) { endRound(); return; }
     if (!someoneAlive && players.size > 0 && now > spawnGraceAt) { endRound(); return; }
-    broadcastState();
+    try { broadcastState(); } catch (e) { console.error('Erro no broadcast:', e); }
   } else if (phase === 'podium') {
     if (now >= podiumEndsAt) toLobby();
   }
