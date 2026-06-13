@@ -3,15 +3,15 @@
    ========================================================================= */
 'use strict';
 
-/* Conecta priorizando WebSocket (essencial em hosts como o Render, onde a
-   troca polling->websocket pode falhar e travar o recebimento do estado).
-   Mantem polling como reserva e reconecta sozinho se a conexao cair. */
+/* Conecta priorizando polling (mais confiavel no Render Free durante cold start).
+   O Socket.io faz upgrade automatico para WebSocket apos a conexao inicial.
+   Isso evita a tela preta que ocorre quando o WebSocket falha no wake-up do servidor. */
 const socket = io({
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
   reconnection: true,
   reconnectionAttempts: Infinity,
-  reconnectionDelay: 800,
-  timeout: 8000,
+  reconnectionDelay: 1500,
+  timeout: 20000,
 });
 
 /* aviso discreto de status da conexao */
@@ -22,11 +22,15 @@ function setNet(txt, show) {
   netStatus.textContent = txt;
   netStatus.classList.toggle('show', show);
 }
-socket.on('connect', () => setNet('', false));
-socket.io.on('reconnect_attempt', () => setNet('Reconectando…', true));
-socket.io.on('error', () => setNet('Reconectando…', true));
-socket.on('connect_error', () => setNet('Sem conexão com o servidor…', true));
-socket.on('disconnect', () => setNet('Reconectando…', true));
+let connectAttempt = 0;
+socket.on('connect', () => { connectAttempt = 0; setNet('', false); });
+socket.io.on('reconnect_attempt', (n) => {
+  connectAttempt = n;
+  setNet('🐍 Acordando o servidor...\nAguarde alguns segundos (' + n + 'ª tentativa)', true);
+});
+socket.io.on('error', () => setNet('🐍 Acordando o servidor...\nAguarde alguns segundos', true));
+socket.on('connect_error', () => setNet('🐍 Conectando ao servidor...\nO servidor pode estar iniciando, aguarde!', true));
+socket.on('disconnect', () => setNet('🐍 Reconectando…', true));
 
 /* ----------------------------- Skins ------------------------------------ */
 function skinColor(skin, i) {
