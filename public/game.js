@@ -3,7 +3,30 @@
    ========================================================================= */
 'use strict';
 
-const socket = io();
+/* Conecta priorizando WebSocket (essencial em hosts como o Render, onde a
+   troca polling->websocket pode falhar e travar o recebimento do estado).
+   Mantem polling como reserva e reconecta sozinho se a conexao cair. */
+const socket = io({
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 800,
+  timeout: 8000,
+});
+
+/* aviso discreto de status da conexao */
+const netStatus = document.createElement('div');
+netStatus.id = 'netStatus';
+document.body.appendChild(netStatus);
+function setNet(txt, show) {
+  netStatus.textContent = txt;
+  netStatus.classList.toggle('show', show);
+}
+socket.on('connect', () => setNet('', false));
+socket.io.on('reconnect_attempt', () => setNet('Reconectando…', true));
+socket.io.on('error', () => setNet('Reconectando…', true));
+socket.on('connect_error', () => setNet('Sem conexão com o servidor…', true));
+socket.on('disconnect', () => setNet('Reconectando…', true));
 
 /* ----------------------------- Skins ------------------------------------ */
 function skinColor(skin, i) {
