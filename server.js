@@ -22,16 +22,18 @@ app.get('/health', (_req, res) => res.send('ok'));
 /* ----------------------------- Configuracao ----------------------------- */
 const TICK_HZ      = 15;                 // simulacao + rede
 const TICK_MS      = 1000 / TICK_HZ;
-const WORLD_RADIUS = 2900;               // arena circular
+const WORLD_RADIUS = 2200;               // arena circular (dimensionada p/ ~25 jogadores)
 const ROUND_MS     = 4 * 60 * 1000;      // 4 minutos
 const PODIUM_MS    = 5000;               // 5 segundos de podio
 const MAX_PLAYERS  = 50;                 // bem acima dos 25 pedidos
-const TARGET_FOOD  = 950;
+const TARGET_FOOD  = 600;
+const BIG_FOOD_VAL = 5;                  // bolas grandes valem mais pontos
 const VIEW_RADIUS  = 1250;               // area de interesse enviada a cada cliente
 const SKIN_COUNT   = 12;
 
 const NORMAL_SPEED = 230 / TICK_HZ;      // px por tick
 const BOOST_SPEED  = 400 / TICK_HZ;
+const BOOST_MIN    = 5;                  // pontos minimos para conseguir acelerar
 const BASE_R       = 14;
 const MIN_LEN      = 240;                // comprimento (px) com score 0
 const MAX_POINTS   = 380;
@@ -69,7 +71,9 @@ function makeFood(x, y, val) {
 function fillFood() {
   while (food.length < TARGET_FOOD) {
     const p = randPointInWorld();
-    food.push(makeFood(p.x, p.y, 1));
+    // ~9% viram bolas grandes que valem bem mais pontos
+    if (Math.random() < 0.09) food.push(makeFood(p.x, p.y, BIG_FOOD_VAL));
+    else food.push(makeFood(p.x, p.y, 1));
   }
 }
 
@@ -113,9 +117,9 @@ function stepSnake(p) {
 
   // velocidade / boost
   let speed = NORMAL_SPEED;
-  if (s.boosting && p.score > 25) {
+  if (s.boosting && p.score > BOOST_MIN) {
     speed = BOOST_SPEED;
-    p.score = Math.max(0, p.score - 0.55);
+    p.score = Math.max(0, p.score - 0.4);
     if (Math.random() < 0.5) {
       const tail = s.pts[s.pts.length - 1];
       food.push(makeFood(tail.x + rand(-6, 6), tail.y + rand(-6, 6), 1));
@@ -168,11 +172,13 @@ function eatFood(p) {
 function killSnake(p) {
   const s = p.snake;
   if (s) {
-    const step = 4;
-    const perOrb = Math.max(2, Math.min(7, Math.round(p.score / Math.max(1, s.pts.length / step) / 2)));
+    const step = 3;
+    const orbs = Math.max(1, Math.floor(s.pts.length / step));
+    // distribui o score (com bonus) em varias bolas grandes e valiosas
+    const per = Math.max(4, Math.round((p.score * 1.25) / orbs));
     for (let i = 0; i < s.pts.length; i += step) {
       const pt = s.pts[i];
-      food.push(makeFood(pt.x + rand(-9, 9), pt.y + rand(-9, 9), perOrb));
+      food.push(makeFood(pt.x + rand(-16, 16), pt.y + rand(-16, 16), per));
     }
   }
   p.snake = null;
