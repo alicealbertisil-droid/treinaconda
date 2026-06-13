@@ -152,11 +152,11 @@ html,body{height:100%;background:var(--night);color:var(--bone);
   background:rgba(13,10,8,.4);padding:5px 12px;border-radius:10px}
 
 /* botao de boost (aparece so no toque/mobile) */
-.boost-btn{position:absolute;z-index:9;display:none;right:18px;bottom:150px;
-  width:104px;height:104px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
+.boost-btn{position:absolute;z-index:9;display:none;right:20px;bottom:130px;
+  width:72px;height:72px;border-radius:50%;border:2px solid rgba(255,255,255,.35);
   background:radial-gradient(circle at 50% 32%,var(--red-glow),var(--red-deep));
-  color:#fff;font-family:'Bungee',cursive;font-size:16px;letter-spacing:.5px;
-  box-shadow:0 8px 26px rgba(224,57,43,.5),inset 0 2px 0 rgba(255,255,255,.3);
+  color:#fff;font-family:'Bungee',cursive;font-size:12px;letter-spacing:.5px;
+  box-shadow:0 6px 18px rgba(224,57,43,.5),inset 0 2px 0 rgba(255,255,255,.3);
   -webkit-user-select:none;user-select:none;touch-action:none;cursor:pointer}
 .boost-btn:active{filter:brightness(1.18);transform:scale(.94)}
 
